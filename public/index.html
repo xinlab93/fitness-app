@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>肌肉健身可视化 - Muscle Fitness Visualizer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>💪 肌肉健身可视化 / Muscle Fitness Visualizer</h1>
+      <p>点击肌肉或搜索运动 / Click muscles or search exercises</p>
+    </header>
+
+    <div class="health-banner">
+      🦴 <strong>个人健康提示 / Health Profile:</strong>
+      腰椎间盘突出 (Lumbar Disc Herniation)。所有动作均会评估腰椎压力等级
+      <span class="spine-badge spine-low">🟢 低</span>
+      <span class="spine-badge spine-mid">🟡 中</span>
+      <span class="spine-badge spine-high">🔴 高</span>
+      并提供保护建议。
+    </div>
+
+    <div class="search-bar search-exercise">
+      <span class="search-icon">🏃</span>
+      <input
+        type="text"
+        id="exerciseInput"
+        placeholder="搜索运动 / Search exercise... (e.g., 跑步, 游泳, 篮球)"
+        autocomplete="off"
+      />
+      <button id="searchBtn">查询 / Search</button>
+      <div class="quick-buttons">
+        <button class="quick-btn" data-exercise="跑步" data-exercise-en="Running">跑步</button>
+        <button class="quick-btn" data-exercise="游泳" data-exercise-en="Swimming">游泳</button>
+        <button class="quick-btn" data-exercise="篮球" data-exercise-en="Basketball">篮球</button>
+        <button class="quick-btn" data-exercise="卧推" data-exercise-en="Bench Press">卧推</button>
+        <button class="quick-btn" data-exercise="深蹲" data-exercise-en="Squat">深蹲</button>
+      </div>
+    </div>
+
+    <div class="search-bar search-injury">
+      <span class="search-icon">🩹</span>
+      <input
+        type="text"
+        id="injuryInput"
+        placeholder="伤病恢复 / Injury recovery... (e.g., 跑步膝, 肩袖损伤)"
+        autocomplete="off"
+      />
+      <button id="injurySearchBtn">康复方案 / Recovery</button>
+      <div class="quick-buttons">
+        <button class="quick-btn quick-injury" data-injury="腰椎间盘突出" data-injury-en="Lumbar Disc Herniation">腰椎间盘突出</button>
+        <button class="quick-btn quick-injury" data-injury="跑步膝" data-injury-en="Runner's Knee">跑步膝</button>
+        <button class="quick-btn quick-injury" data-injury="肩袖损伤" data-injury-en="Rotator Cuff Injury">肩袖损伤</button>
+        <button class="quick-btn quick-injury" data-injury="网球肘" data-injury-en="Tennis Elbow">网球肘</button>
+        <button class="quick-btn quick-injury" data-injury="踝关节扭伤" data-injury-en="Ankle Sprain">踝关节扭伤</button>
+        <button class="quick-btn quick-injury" data-injury="颈椎病" data-injury-en="Cervical Spondylosis">颈椎病</button>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <div class="body-section">
+        <div class="view-toggle">
+          <button class="view-btn active" data-view="front">正面 / Front</button>
+          <button class="view-btn" data-view="back">背面 / Back</button>
+        </div>
+
+        <svg
+          id="bodyDiagram"
+          viewBox="0 0 420 740"
+          xmlns="http://www.w3.org/2000/svg"
+          class="body-diagram"
+        >
+          <defs>
+            <!-- Body skin gradient -->
+            <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#3a342e" />
+              <stop offset="50%" stop-color="#28231e" />
+              <stop offset="100%" stop-color="#1a1611" />
+            </linearGradient>
+
+            <!-- Side body shading -->
+            <linearGradient id="bodyShade" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="rgba(0,0,0,0.6)" />
+              <stop offset="20%" stop-color="rgba(0,0,0,0)" />
+              <stop offset="80%" stop-color="rgba(0,0,0,0)" />
+              <stop offset="100%" stop-color="rgba(0,0,0,0.6)" />
+            </linearGradient>
+
+            <!-- Main muscle gradient (warm orange volume) -->
+            <linearGradient id="muscleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#ffb870" />
+              <stop offset="35%" stop-color="#ff8a30" />
+              <stop offset="75%" stop-color="#d65500" />
+              <stop offset="100%" stop-color="#7a2900" />
+            </linearGradient>
+
+            <!-- Specular highlight for muscle bulge -->
+            <radialGradient id="muscleShine" cx="50%" cy="25%" r="55%">
+              <stop offset="0%" stop-color="rgba(255, 220, 180, 0.7)" />
+              <stop offset="40%" stop-color="rgba(255, 200, 150, 0.25)" />
+              <stop offset="100%" stop-color="rgba(255, 200, 150, 0)" />
+            </radialGradient>
+
+            <!-- Head gradient -->
+            <radialGradient id="headGrad" cx="40%" cy="35%" r="65%">
+              <stop offset="0%" stop-color="#5a504a" />
+              <stop offset="60%" stop-color="#352f29" />
+              <stop offset="100%" stop-color="#1f1b16" />
+            </radialGradient>
+
+            <!-- Background glow -->
+            <radialGradient id="bgGlow" cx="50%" cy="40%" r="60%">
+              <stop offset="0%" stop-color="rgba(255, 140, 0, 0.18)" />
+              <stop offset="60%" stop-color="rgba(255, 140, 0, 0.04)" />
+              <stop offset="100%" stop-color="rgba(255, 140, 0, 0)" />
+            </radialGradient>
+
+            <!-- Drop shadow filter -->
+            <filter id="muscleShadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="2.5" />
+              <feOffset dx="0" dy="2" result="offsetblur" />
+              <feComponentTransfer>
+                <feFuncA type="linear" slope="0.65" />
+              </feComponentTransfer>
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <!-- Inner shadow for body -->
+            <filter id="innerShadow" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
+              <feOffset dx="0" dy="3" />
+              <feComposite in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowDiff" />
+              <feFlood flood-color="#000" flood-opacity="0.6" />
+              <feComposite in2="shadowDiff" operator="in" />
+              <feMerge>
+                <feMergeNode in="SourceGraphic" />
+                <feMergeNode />
+              </feMerge>
+            </filter>
+
+            <!-- Reusable muscle group template combining gradient + shine -->
+            <symbol id="shineOverlay" overflow="visible">
+              <ellipse rx="40%" ry="25%" cx="50%" cy="30%" fill="url(#muscleShine)" />
+            </symbol>
+          </defs>
+
+          <!-- Background ambient glow -->
+          <ellipse cx="210" cy="370" rx="200" ry="320" fill="url(#bgGlow)" />
+
+          <!-- Floor shadow -->
+          <ellipse cx="210" cy="715" rx="80" ry="8" fill="rgba(0,0,0,0.5)" />
+
+          <!-- ========== FRONT VIEW ========== -->
+          <g id="front-view" data-view="front">
+            <!-- Body Silhouette: athletic V-taper proportions -->
+            <path
+              d="M 210,38
+                 C 178,38 168,66 172,98
+                 C 172,110 178,120 184,128
+                 L 184,140
+                 C 178,144 168,146 158,148
+                 C 132,154 108,170 96,196
+                 C 88,220 82,250 80,282
+                 L 76,322
+                 L 73,358
+                 L 76,378
+                 L 84,380
+                 L 92,360
+                 L 100,318
+                 C 105,294 113,272 124,266
+                 C 132,266 138,275 140,294
+                 C 144,328 148,372 152,422
+                 L 156,510
+                 L 153,592
+                 L 150,668
+                 L 152,696
+                 L 188,696
+                 L 188,672
+                 L 190,598
+                 L 198,510
+                 L 206,422
+                 L 210,398
+                 L 214,422
+                 L 222,510
+                 L 230,598
+                 L 232,672
+                 L 232,696
+                 L 268,696
+                 L 270,668
+                 L 267,592
+                 L 264,510
+                 L 268,422
+                 C 272,372 276,328 280,294
+                 C 282,275 288,266 296,266
+                 C 307,272 315,294 320,318
+                 L 328,360
+                 L 336,380
+                 L 344,378
+                 L 347,358
+                 L 344,322
+                 L 340,282
+                 C 338,250 332,220 324,196
+                 C 312,170 288,154 262,148
+                 C 252,146 242,144 236,140
+                 L 236,128
+                 C 242,120 248,110 248,98
+                 C 252,66 242,38 210,38 Z"
+              fill="url(#bodyGrad)"
+              stroke="#4a4038"
+              stroke-width="1.5"
+              filter="url(#innerShadow)"
+            />
+
+            <!-- Side shading overlay -->
+            <path
+              d="M 96,196 C 88,220 82,250 80,282 L 76,322 L 73,358 L 76,378 L 84,380 L 100,318 C 105,294 113,272 124,266 C 132,266 138,275 140,294 C 144,328 148,372 152,422 L 156,510 L 153,592 L 150,668 L 152,696 L 188,696 L 188,672 L 198,510 L 210,398 L 222,510 L 232,672 L 232,696 L 268,696 L 264,510 L 268,422 C 272,372 276,328 280,294 C 282,275 288,266 296,266 C 307,272 315,294 320,318 L 336,380 L 344,378 L 340,282 C 338,250 332,220 324,196 C 312,170 288,154 262,148 L 158,148 C 132,154 108,170 96,196 Z"
+              fill="url(#bodyShade)"
+              opacity="0.5"
+              pointer-events="none"
+            />
+
+            <!-- Head shading -->
+            <ellipse cx="210" cy="74" rx="36" ry="40" fill="url(#headGrad)" pointer-events="none" />
+
+            <!-- Sternocleidomastoid (neck muscles, decorative) -->
+            <path
+              d="M 196,128 Q 200,138 195,148"
+              stroke="#5a4a40"
+              stroke-width="2"
+              fill="none"
+              opacity="0.6"
+              pointer-events="none"
+            />
+            <path
+              d="M 224,128 Q 220,138 225,148"
+              stroke="#5a4a40"
+              stroke-width="2"
+              fill="none"
+              opacity="0.6"
+              pointer-events="none"
+            />
+
+            <!-- Trapezius upper (front, decorative) -->
+            <path
+              d="M 184,140 Q 210,154 236,140 L 256,162 Q 210,176 164,162 Z"
+              fill="url(#muscleGrad)"
+              opacity="0.55"
+              pointer-events="none"
+            />
+
+            <!-- ===== Pectorals (Chest) ===== -->
+            <g class="muscle-group">
+              <path
+                class="muscle"
+                data-muscle="胸大肌"
+                data-muscle-en="Pectoralis Major"
+                d="M 207,158
+                   Q 207,178 200,200
+                   Q 188,222 165,224
+                   Q 138,222 128,205
+                   Q 122,182 130,164
+                   Q 154,152 184,154
+                   Q 200,154 207,158 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="160" cy="180" rx="22" ry="14" fill="url(#muscleShine)" pointer-events="none" />
+              <path
+                d="M 165,224 Q 165,210 170,196"
+                stroke="#1a0a00"
+                stroke-width="1.2"
+                fill="none"
+                opacity="0.55"
+                pointer-events="none"
+              />
+
+              <path
+                class="muscle"
+                data-muscle="胸大肌"
+                data-muscle-en="Pectoralis Major"
+                d="M 213,158
+                   Q 213,178 220,200
+                   Q 232,222 255,224
+                   Q 282,222 292,205
+                   Q 298,182 290,164
+                   Q 266,152 236,154
+                   Q 220,154 213,158 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="260" cy="180" rx="22" ry="14" fill="url(#muscleShine)" pointer-events="none" />
+              <path
+                d="M 255,224 Q 255,210 250,196"
+                stroke="#1a0a00"
+                stroke-width="1.2"
+                fill="none"
+                opacity="0.55"
+                pointer-events="none"
+              />
+            </g>
+
+            <!-- Pec center line/sternum -->
+            <line x1="210" y1="158" x2="210" y2="222" stroke="#0a0500" stroke-width="1.5" opacity="0.7" pointer-events="none" />
+
+            <!-- ===== Deltoids (Shoulders) ===== -->
+            <g class="muscle-group">
+              <path
+                class="muscle"
+                data-muscle="三角肌"
+                data-muscle-en="Deltoid"
+                d="M 138,158
+                   Q 116,156 100,180
+                   Q 90,206 96,228
+                   Q 110,225 124,210
+                   Q 134,188 138,164 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="116" cy="190" rx="14" ry="18" fill="url(#muscleShine)" pointer-events="none" />
+              <!-- 3-head separation lines -->
+              <path d="M 105,205 Q 118,200 124,210" stroke="#1a0a00" stroke-width="0.8" fill="none" opacity="0.4" pointer-events="none" />
+              <path d="M 100,180 Q 112,182 122,180" stroke="#1a0a00" stroke-width="0.8" fill="none" opacity="0.4" pointer-events="none" />
+
+              <path
+                class="muscle"
+                data-muscle="三角肌"
+                data-muscle-en="Deltoid"
+                d="M 282,158
+                   Q 304,156 320,180
+                   Q 330,206 324,228
+                   Q 310,225 296,210
+                   Q 286,188 282,164 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="304" cy="190" rx="14" ry="18" fill="url(#muscleShine)" pointer-events="none" />
+              <path d="M 315,205 Q 302,200 296,210" stroke="#1a0a00" stroke-width="0.8" fill="none" opacity="0.4" pointer-events="none" />
+              <path d="M 320,180 Q 308,182 298,180" stroke="#1a0a00" stroke-width="0.8" fill="none" opacity="0.4" pointer-events="none" />
+            </g>
+
+            <!-- ===== Biceps ===== -->
+            <g class="muscle-group">
+              <path
+                class="muscle"
+                data-muscle="肱二头肌"
+                data-muscle-en="Biceps"
+                d="M 96,232
+                   Q 84,250 82,282
+                   Q 86,304 100,306
+                   Q 114,302 116,284
+                   Q 117,254 110,230 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="100" cy="262" rx="9" ry="20" fill="url(#muscleShine)" pointer-events="none" />
+              <!-- Biceps long/short head split -->
+              <path d="M 100,238 Q 102,265 104,295" stroke="#1a0a00" stroke-width="0.7" fill="none" opacity="0.5" pointer-events="none" />
+
+              <path
+                class="muscle"
+                data-muscle="肱二头肌"
+                data-muscle-en="Biceps"
+                d="M 324,232
+                   Q 336,250 338,282
+                   Q 334,304 320,306
+                   Q 306,302 304,284
+                   Q 303,254 310,230 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="320" cy="262" rx="9" ry="20" fill="url(#muscleShine)" pointer-events="none" />
+              <path d="M 320,238 Q 318,265 316,295" stroke="#1a0a00" stroke-width="0.7" fill="none" opacity="0.5" pointer-events="none" />
+            </g>
+
+            <!-- Elbow joint -->
+            <ellipse cx="100" cy="312" rx="10" ry="6" fill="#2a2520" stroke="#4a4038" stroke-width="0.8" pointer-events="none" />
+            <ellipse cx="320" cy="312" rx="10" ry="6" fill="#2a2520" stroke="#4a4038" stroke-width="0.8" pointer-events="none" />
+
+            <!-- ===== Forearms ===== -->
+            <g class="muscle-group">
+              <path
+                class="muscle"
+                data-muscle="前臂"
+                data-muscle-en="Forearms"
+                d="M 84,318
+                   Q 76,344 76,376
+                   L 82,398
+                   L 92,398
+                   L 100,376
+                   Q 105,344 100,318 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="88" cy="345" rx="8" ry="20" fill="url(#muscleShine)" pointer-events="none" />
+              <!-- Forearm tendon lines -->
+              <path d="M 85,340 Q 88,365 90,388" stroke="#1a0a00" stroke-width="0.6" fill="none" opacity="0.45" pointer-events="none" />
+              <path d="M 95,340 Q 96,365 95,388" stroke="#1a0a00" stroke-width="0.6" fill="none" opacity="0.45" pointer-events="none" />
+
+              <path
+                class="muscle"
+                data-muscle="前臂"
+                data-muscle-en="Forearms"
+                d="M 336,318
+                   Q 344,344 344,376
+                   L 338,398
+                   L 328,398
+                   L 320,376
+                   Q 315,344 320,318 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="332" cy="345" rx="8" ry="20" fill="url(#muscleShine)" pointer-events="none" />
+              <path d="M 335,340 Q 332,365 330,388" stroke="#1a0a00" stroke-width="0.6" fill="none" opacity="0.45" pointer-events="none" />
+              <path d="M 325,340 Q 324,365 325,388" stroke="#1a0a00" stroke-width="0.6" fill="none" opacity="0.45" pointer-events="none" />
+            </g>
+
+            <!-- ===== Abs (6-pack) ===== -->
+            <g class="muscle-group">
+              <!-- Top row -->
+              <path class="muscle" data-muscle="腹肌" data-muscle-en="Rectus Abdominis"
+                d="M 188,232 Q 188,228 192,228 L 207,228 Q 209,228 209,232 L 209,248 Q 209,252 207,252 L 192,252 Q 188,252 188,248 Z"
+                fill="url(#muscleGrad)" filter="url(#muscleShadow)" />
+              <path class="muscle" data-muscle="腹肌" data-muscle-en="Rectus Abdominis"
+                d="M 211,232 Q 211,228 213,228 L 228,228 Q 232,228 232,232 L 232,248 Q 232,252 228,252 L 213,252 Q 211,252 211,248 Z"
+                fill="url(#muscleGrad)" filter="url(#muscleShadow)" />
+              <!-- Mid row -->
+              <path class="muscle" data-muscle="腹肌" data-muscle-en="Rectus Abdominis"
+                d="M 187,256 Q 187,252 191,252 L 207,252 Q 209,252 209,256 L 209,275 Q 209,279 207,279 L 191,279 Q 187,279 187,275 Z"
+                fill="url(#muscleGrad)" filter="url(#muscleShadow)" />
+              <path class="muscle" data-muscle="腹肌" data-muscle-en="Rectus Abdominis"
+                d="M 211,256 Q 211,252 213,252 L 229,252 Q 233,252 233,256 L 233,275 Q 233,279 229,279 L 213,279 Q 211,279 211,275 Z"
+                fill="url(#muscleGrad)" filter="url(#muscleShadow)" />
+              <!-- Bottom row -->
+              <path class="muscle" data-muscle="腹肌" data-muscle-en="Rectus Abdominis"
+                d="M 186,283 Q 186,279 190,279 L 207,279 Q 209,279 209,283 L 209,308 Q 209,313 205,313 L 190,310 Q 186,308 186,304 Z"
+                fill="url(#muscleGrad)" filter="url(#muscleShadow)" />
+              <path class="muscle" data-muscle="腹肌" data-muscle-en="Rectus Abdominis"
+                d="M 211,283 Q 211,279 213,279 L 230,279 Q 234,279 234,283 L 234,304 Q 234,308 230,310 L 215,313 Q 211,313 211,308 Z"
+                fill="url(#muscleGrad)" filter="url(#muscleShadow)" />
+              <!-- Mini highlights on each ab -->
+              <ellipse cx="198" cy="237" rx="6" ry="4" fill="url(#muscleShine)" pointer-events="none" />
+              <ellipse cx="221" cy="237" rx="6" ry="4" fill="url(#muscleShine)" pointer-events="none" />
+            </g>
+            <!-- Linea alba (center vertical line) -->
+            <line x1="210" y1="228" x2="210" y2="313" stroke="#000" stroke-width="1" opacity="0.65" pointer-events="none" />
+
+            <!-- ===== Obliques ===== -->
+            <g class="muscle-group">
+              <path
+                class="muscle"
+                data-muscle="腹斜肌"
+                data-muscle-en="Obliques"
+                d="M 168,232
+                   Q 156,270 162,310
+                   Q 172,322 184,316
+                   L 185,278
+                   L 184,238 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+                opacity="0.92"
+              />
+              <ellipse cx="172" cy="275" rx="6" ry="22" fill="url(#muscleShine)" pointer-events="none" />
+              <!-- Serratus lines (decorative) -->
+              <path d="M 165,250 L 184,246" stroke="#1a0a00" stroke-width="0.5" opacity="0.4" pointer-events="none" />
+              <path d="M 162,265 L 184,262" stroke="#1a0a00" stroke-width="0.5" opacity="0.4" pointer-events="none" />
+              <path d="M 162,282 L 184,278" stroke="#1a0a00" stroke-width="0.5" opacity="0.4" pointer-events="none" />
+
+              <path
+                class="muscle"
+                data-muscle="腹斜肌"
+                data-muscle-en="Obliques"
+                d="M 252,232
+                   Q 264,270 258,310
+                   Q 248,322 236,316
+                   L 235,278
+                   L 236,238 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+                opacity="0.92"
+              />
+              <ellipse cx="248" cy="275" rx="6" ry="22" fill="url(#muscleShine)" pointer-events="none" />
+              <path d="M 255,250 L 236,246" stroke="#1a0a00" stroke-width="0.5" opacity="0.4" pointer-events="none" />
+              <path d="M 258,265 L 236,262" stroke="#1a0a00" stroke-width="0.5" opacity="0.4" pointer-events="none" />
+              <path d="M 258,282 L 236,278" stroke="#1a0a00" stroke-width="0.5" opacity="0.4" pointer-events="none" />
+            </g>
+
+            <!-- Hip/pelvis V-cut -->
+            <path d="M 165,322 Q 200,335 210,400 Q 220,335 255,322" stroke="#1a0a00" stroke-width="1" fill="none" opacity="0.55" pointer-events="none" />
+
+            <!-- ===== Quadriceps ===== -->
+            <g class="muscle-group">
+              <path
+                class="muscle"
+                data-muscle="股四头肌"
+                data-muscle-en="Quadriceps"
+                d="M 158,372
+                   Q 144,420 150,500
+                   Q 162,520 188,512
+                   Q 196,470 200,425
+                   Q 202,388 192,372
+                   Q 175,366 158,372 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="172" cy="430" rx="14" ry="32" fill="url(#muscleShine)" pointer-events="none" />
+              <!-- Quad heads separation -->
+              <path d="M 160,400 Q 165,440 170,490" stroke="#1a0a00" stroke-width="0.7" fill="none" opacity="0.45" pointer-events="none" />
+              <path d="M 185,400 Q 188,445 188,495" stroke="#1a0a00" stroke-width="0.7" fill="none" opacity="0.45" pointer-events="none" />
+              <!-- VMO teardrop (lower inner quad) -->
+              <ellipse cx="186" cy="500" rx="8" ry="14" fill="url(#muscleShine)" pointer-events="none" opacity="0.6" />
+
+              <path
+                class="muscle"
+                data-muscle="股四头肌"
+                data-muscle-en="Quadriceps"
+                d="M 262,372
+                   Q 276,420 270,500
+                   Q 258,520 232,512
+                   Q 224,470 220,425
+                   Q 218,388 228,372
+                   Q 245,366 262,372 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="248" cy="430" rx="14" ry="32" fill="url(#muscleShine)" pointer-events="none" />
+              <path d="M 260,400 Q 255,440 250,490" stroke="#1a0a00" stroke-width="0.7" fill="none" opacity="0.45" pointer-events="none" />
+              <path d="M 235,400 Q 232,445 232,495" stroke="#1a0a00" stroke-width="0.7" fill="none" opacity="0.45" pointer-events="none" />
+              <ellipse cx="234" cy="500" rx="8" ry="14" fill="url(#muscleShine)" pointer-events="none" opacity="0.6" />
+            </g>
+
+            <!-- Knee caps -->
+            <ellipse cx="178" cy="535" rx="16" ry="11" fill="#3a342e" stroke="#5a504a" stroke-width="1.2" pointer-events="none" />
+            <ellipse cx="242" cy="535" rx="16" ry="11" fill="#3a342e" stroke="#5a504a" stroke-width="1.2" pointer-events="none" />
+            <ellipse cx="178" cy="532" rx="10" ry="5" fill="#5a504a" opacity="0.4" pointer-events="none" />
+            <ellipse cx="242" cy="532" rx="10" ry="5" fill="#5a504a" opacity="0.4" pointer-events="none" />
+
+            <!-- ===== Calves (front - tibialis anterior) ===== -->
+            <g class="muscle-group">
+              <path
+                class="muscle"
+                data-muscle="小腿"
+                data-muscle-en="Calves"
+                d="M 158,553
+                   Q 152,590 156,648
+                   Q 164,668 182,662
+                   Q 188,624 184,584
+                   Q 180,557 170,553 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="170" cy="600" rx="9" ry="28" fill="url(#muscleShine)" pointer-events="none" />
+              <path d="M 165,580 Q 168,615 172,648" stroke="#1a0a00" stroke-width="0.6" fill="none" opacity="0.4" pointer-events="none" />
+
+              <path
+                class="muscle"
+                data-muscle="小腿"
+                data-muscle-en="Calves"
+                d="M 262,553
+                   Q 268,590 264,648
+                   Q 256,668 238,662
+                   Q 232,624 236,584
+                   Q 240,557 250,553 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="250" cy="600" rx="9" ry="28" fill="url(#muscleShine)" pointer-events="none" />
+              <path d="M 255,580 Q 252,615 248,648" stroke="#1a0a00" stroke-width="0.6" fill="none" opacity="0.4" pointer-events="none" />
+            </g>
+
+            <!-- Face features -->
+            <ellipse cx="198" cy="70" rx="2.2" ry="3" fill="#0a0500" pointer-events="none" />
+            <ellipse cx="222" cy="70" rx="2.2" ry="3" fill="#0a0500" pointer-events="none" />
+            <ellipse cx="198" cy="69" rx="0.8" ry="1.2" fill="#fff" opacity="0.7" pointer-events="none" />
+            <ellipse cx="222" cy="69" rx="0.8" ry="1.2" fill="#fff" opacity="0.7" pointer-events="none" />
+            <path d="M 200,90 Q 210,96 220,90" stroke="#1a0a00" stroke-width="1.4" fill="none" pointer-events="none" />
+            <!-- Jawline -->
+            <path d="M 184,100 Q 210,118 236,100" stroke="#000" stroke-width="0.8" fill="none" opacity="0.4" pointer-events="none" />
+          </g>
+
+          <!-- ========== BACK VIEW ========== -->
+          <g id="back-view" data-view="back" style="display: none">
+            <!-- Body Silhouette (same shape) -->
+            <path
+              d="M 210,38
+                 C 178,38 168,66 172,98
+                 C 172,110 178,120 184,128
+                 L 184,140
+                 C 178,144 168,146 158,148
+                 C 132,154 108,170 96,196
+                 C 88,220 82,250 80,282
+                 L 76,322
+                 L 73,358
+                 L 76,378
+                 L 84,380
+                 L 92,360
+                 L 100,318
+                 C 105,294 113,272 124,266
+                 C 132,266 138,275 140,294
+                 C 144,328 148,372 152,422
+                 L 156,510
+                 L 153,592
+                 L 150,668
+                 L 152,696
+                 L 188,696
+                 L 188,672
+                 L 190,598
+                 L 198,510
+                 L 206,422
+                 L 210,398
+                 L 214,422
+                 L 222,510
+                 L 230,598
+                 L 232,672
+                 L 232,696
+                 L 268,696
+                 L 270,668
+                 L 267,592
+                 L 264,510
+                 L 268,422
+                 C 272,372 276,328 280,294
+                 C 282,275 288,266 296,266
+                 C 307,272 315,294 320,318
+                 L 328,360
+                 L 336,380
+                 L 344,378
+                 L 347,358
+                 L 344,322
+                 L 340,282
+                 C 338,250 332,220 324,196
+                 C 312,170 288,154 262,148
+                 C 252,146 242,144 236,140
+                 L 236,128
+                 C 242,120 248,110 248,98
+                 C 252,66 242,38 210,38 Z"
+              fill="url(#bodyGrad)"
+              stroke="#4a4038"
+              stroke-width="1.5"
+              filter="url(#innerShadow)"
+            />
+
+            <!-- Side shading -->
+            <path
+              d="M 96,196 C 88,220 82,250 80,282 L 76,322 L 73,358 L 76,378 L 84,380 L 92,360 L 100,318 C 105,294 113,272 124,266 C 132,266 138,275 140,294 C 144,328 148,372 152,422 L 156,510 L 153,592 L 150,668 L 152,696 L 188,696 L 188,672 L 198,510 L 210,398 L 222,510 L 232,672 L 232,696 L 268,696 L 264,510 L 268,422 C 272,372 276,328 280,294 C 282,275 288,266 296,266 C 307,272 315,294 320,318 L 336,380 L 344,378 L 340,282 C 338,250 332,220 324,196 C 312,170 288,154 262,148 L 158,148 C 132,154 108,170 96,196 Z"
+              fill="url(#bodyShade)"
+              opacity="0.5"
+              pointer-events="none"
+            />
+
+            <!-- Head back -->
+            <ellipse cx="210" cy="74" rx="36" ry="40" fill="url(#headGrad)" pointer-events="none" />
+
+            <!-- ===== Trapezius ===== -->
+            <g class="muscle-group">
+              <path
+                class="muscle"
+                data-muscle="斜方肌"
+                data-muscle-en="Trapezius"
+                d="M 210,124
+                   L 184,148
+                   L 152,194
+                   L 188,212
+                   L 210,222
+                   L 232,212
+                   L 268,194
+                   L 236,148 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="210" cy="170" rx="40" ry="20" fill="url(#muscleShine)" pointer-events="none" />
+              <!-- Trap halves divider -->
+              <line x1="210" y1="124" x2="210" y2="222" stroke="#0a0500" stroke-width="1.2" opacity="0.6" pointer-events="none" />
+              <!-- Trap fiber lines -->
+              <path d="M 210,140 Q 195,160 175,180" stroke="#1a0a00" stroke-width="0.6" fill="none" opacity="0.4" pointer-events="none" />
+              <path d="M 210,140 Q 225,160 245,180" stroke="#1a0a00" stroke-width="0.6" fill="none" opacity="0.4" pointer-events="none" />
+            </g>
+
+            <!-- ===== Deltoids back ===== -->
+            <g class="muscle-group">
+              <path
+                class="muscle"
+                data-muscle="三角肌"
+                data-muscle-en="Deltoid"
+                d="M 138,158
+                   Q 114,156 98,184
+                   Q 88,212 96,232
+                   Q 116,228 130,212
+                   Q 140,190 140,166 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="116" cy="195" rx="14" ry="20" fill="url(#muscleShine)" pointer-events="none" />
+
+              <path
+                class="muscle"
+                data-muscle="三角肌"
+                data-muscle-en="Deltoid"
+                d="M 282,158
+                   Q 306,156 322,184
+                   Q 332,212 324,232
+                   Q 304,228 290,212
+                   Q 280,190 280,166 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="304" cy="195" rx="14" ry="20" fill="url(#muscleShine)" pointer-events="none" />
+            </g>
+
+            <!-- ===== Latissimus Dorsi (V-shape back) ===== -->
+            <g class="muscle-group">
+              <path
+                class="muscle"
+                data-muscle="背阔肌"
+                data-muscle-en="Latissimus Dorsi"
+                d="M 152,222
+                   Q 124,250 124,290
+                   Q 130,322 188,330
+                   L 210,310
+                   L 232,330
+                   Q 290,322 296,290
+                   Q 296,250 268,222
+                   L 246,238
+                   L 210,246
+                   L 174,238 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <!-- Highlight on each lat wing -->
+              <ellipse cx="155" cy="280" rx="14" ry="32" fill="url(#muscleShine)" pointer-events="none" />
+              <ellipse cx="265" cy="280" rx="14" ry="32" fill="url(#muscleShine)" pointer-events="none" />
+              <!-- Spine center line -->
+              <line x1="210" y1="246" x2="210" y2="318" stroke="#000" stroke-width="1.2" opacity="0.7" pointer-events="none" />
+              <!-- Lat striations -->
+              <path d="M 145,260 Q 175,265 200,275" stroke="#1a0a00" stroke-width="0.6" fill="none" opacity="0.4" pointer-events="none" />
+              <path d="M 140,285 Q 170,290 200,300" stroke="#1a0a00" stroke-width="0.6" fill="none" opacity="0.4" pointer-events="none" />
+              <path d="M 275,260 Q 245,265 220,275" stroke="#1a0a00" stroke-width="0.6" fill="none" opacity="0.4" pointer-events="none" />
+              <path d="M 280,285 Q 250,290 220,300" stroke="#1a0a00" stroke-width="0.6" fill="none" opacity="0.4" pointer-events="none" />
+            </g>
+
+            <!-- Lower back / erectors hint -->
+            <path
+              d="M 200,318 Q 208,335 200,355 M 220,318 Q 212,335 220,355"
+              stroke="#3a2a1a"
+              stroke-width="3"
+              fill="none"
+              opacity="0.5"
+              pointer-events="none"
+            />
+
+            <!-- ===== Triceps (horseshoe shape) ===== -->
+            <g class="muscle-group">
+              <path
+                class="muscle"
+                data-muscle="肱三头肌"
+                data-muscle-en="Triceps"
+                d="M 96,234
+                   Q 80,254 78,288
+                   Q 84,310 100,310
+                   Q 116,304 118,284
+                   Q 120,254 110,232 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="100" cy="265" rx="11" ry="22" fill="url(#muscleShine)" pointer-events="none" />
+              <!-- Triceps 3-head split -->
+              <path d="M 100,240 Q 100,270 100,300" stroke="#1a0a00" stroke-width="0.7" fill="none" opacity="0.5" pointer-events="none" />
+              <path d="M 90,260 Q 92,280 95,300" stroke="#1a0a00" stroke-width="0.5" fill="none" opacity="0.4" pointer-events="none" />
+
+              <path
+                class="muscle"
+                data-muscle="肱三头肌"
+                data-muscle-en="Triceps"
+                d="M 324,234
+                   Q 340,254 342,288
+                   Q 336,310 320,310
+                   Q 304,304 302,284
+                   Q 300,254 310,232 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="320" cy="265" rx="11" ry="22" fill="url(#muscleShine)" pointer-events="none" />
+              <path d="M 320,240 Q 320,270 320,300" stroke="#1a0a00" stroke-width="0.7" fill="none" opacity="0.5" pointer-events="none" />
+              <path d="M 330,260 Q 328,280 325,300" stroke="#1a0a00" stroke-width="0.5" fill="none" opacity="0.4" pointer-events="none" />
+            </g>
+
+            <!-- Forearms back -->
+            <g class="muscle-group">
+              <path
+                class="muscle"
+                data-muscle="前臂"
+                data-muscle-en="Forearms"
+                d="M 84,318 Q 76,344 76,376 L 82,398 L 92,398 L 100,376 Q 105,344 100,318 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="88" cy="345" rx="8" ry="20" fill="url(#muscleShine)" pointer-events="none" />
+
+              <path
+                class="muscle"
+                data-muscle="前臂"
+                data-muscle-en="Forearms"
+                d="M 336,318 Q 344,344 344,376 L 338,398 L 328,398 L 320,376 Q 315,344 320,318 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="332" cy="345" rx="8" ry="20" fill="url(#muscleShine)" pointer-events="none" />
+            </g>
+
+            <!-- ===== Glutes ===== -->
+            <g class="muscle-group">
+              <path
+                class="muscle"
+                data-muscle="臀大肌"
+                data-muscle-en="Glutes"
+                d="M 152,348
+                   Q 134,388 154,420
+                   Q 184,430 206,418
+                   L 210,408
+                   L 214,418
+                   Q 236,430 266,420
+                   Q 286,388 268,348
+                   Q 240,332 210,335
+                   Q 180,332 152,348 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="178" cy="385" rx="20" ry="20" fill="url(#muscleShine)" pointer-events="none" />
+              <ellipse cx="242" cy="385" rx="20" ry="20" fill="url(#muscleShine)" pointer-events="none" />
+              <!-- Glute split -->
+              <path d="M 210,348 Q 210,395 210,418" stroke="#000" stroke-width="1.5" opacity="0.7" pointer-events="none" />
+              <!-- Glute fold below -->
+              <path d="M 158,420 Q 184,432 210,422" stroke="#1a0a00" stroke-width="1" fill="none" opacity="0.5" pointer-events="none" />
+              <path d="M 262,420 Q 236,432 210,422" stroke="#1a0a00" stroke-width="1" fill="none" opacity="0.5" pointer-events="none" />
+            </g>
+
+            <!-- ===== Hamstrings (3 heads) ===== -->
+            <g class="muscle-group">
+              <path
+                class="muscle"
+                data-muscle="腘绳肌"
+                data-muscle-en="Hamstrings"
+                d="M 158,438
+                   Q 146,485 154,528
+                   Q 168,536 188,532
+                   Q 192,485 196,440
+                   Q 196,432 188,432 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="172" cy="480" rx="13" ry="32" fill="url(#muscleShine)" pointer-events="none" />
+              <!-- Hamstring 3-head split -->
+              <path d="M 168,450 Q 170,480 172,520" stroke="#1a0a00" stroke-width="0.7" fill="none" opacity="0.45" pointer-events="none" />
+              <path d="M 184,450 Q 184,480 184,524" stroke="#1a0a00" stroke-width="0.7" fill="none" opacity="0.45" pointer-events="none" />
+
+              <path
+                class="muscle"
+                data-muscle="腘绳肌"
+                data-muscle-en="Hamstrings"
+                d="M 262,438
+                   Q 274,485 266,528
+                   Q 252,536 232,532
+                   Q 228,485 224,440
+                   Q 224,432 232,432 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="248" cy="480" rx="13" ry="32" fill="url(#muscleShine)" pointer-events="none" />
+              <path d="M 252,450 Q 250,480 248,520" stroke="#1a0a00" stroke-width="0.7" fill="none" opacity="0.45" pointer-events="none" />
+              <path d="M 236,450 Q 236,480 236,524" stroke="#1a0a00" stroke-width="0.7" fill="none" opacity="0.45" pointer-events="none" />
+            </g>
+
+            <!-- Knee back fold -->
+            <ellipse cx="178" cy="540" rx="12" ry="5" fill="#1a1611" pointer-events="none" />
+            <ellipse cx="242" cy="540" rx="12" ry="5" fill="#1a1611" pointer-events="none" />
+
+            <!-- ===== Calves back (gastrocnemius) ===== -->
+            <g class="muscle-group">
+              <path
+                class="muscle"
+                data-muscle="小腿"
+                data-muscle-en="Calves"
+                d="M 156,558
+                   Q 146,595 156,640
+                   Q 168,664 186,656
+                   Q 192,618 188,576
+                   Q 184,560 172,558 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="170" cy="600" rx="11" ry="30" fill="url(#muscleShine)" pointer-events="none" />
+              <!-- Gastrocnemius medial/lateral split -->
+              <line x1="170" y1="565" x2="172" y2="640" stroke="#0a0500" stroke-width="1" opacity="0.55" pointer-events="none" />
+              <!-- Achilles tendon -->
+              <path d="M 168,640 Q 170,660 172,680" stroke="#1a0a00" stroke-width="2" fill="none" opacity="0.6" pointer-events="none" />
+
+              <path
+                class="muscle"
+                data-muscle="小腿"
+                data-muscle-en="Calves"
+                d="M 264,558
+                   Q 274,595 264,640
+                   Q 252,664 234,656
+                   Q 228,618 232,576
+                   Q 236,560 248,558 Z"
+                fill="url(#muscleGrad)"
+                filter="url(#muscleShadow)"
+              />
+              <ellipse cx="250" cy="600" rx="11" ry="30" fill="url(#muscleShine)" pointer-events="none" />
+              <line x1="250" y1="565" x2="248" y2="640" stroke="#0a0500" stroke-width="1" opacity="0.55" pointer-events="none" />
+              <path d="M 252,640 Q 250,660 248,680" stroke="#1a0a00" stroke-width="2" fill="none" opacity="0.6" pointer-events="none" />
+            </g>
+          </g>
+        </svg>
+
+        <div class="legend">
+          <p>💡 点击肌肉查看训练动作 / Click muscle to see exercises</p>
+          <p>🔍 搜索运动查看目标肌肉 / Search exercise to see muscles</p>
+        </div>
+      </div>
+
+      <div class="results-section">
+        <div class="results-header">
+          <h2 id="resultsTitle">结果面板 / Results</h2>
+          <button id="clearBtn" class="clear-btn">✕ 清空 / Clear</button>
+        </div>
+        <div id="results" class="results-container">
+          <div class="placeholder">
+            <p>💪 选择肌肉或搜索运动以获取信息</p>
+            <p>📍 Select a muscle or search for an exercise</p>
+          </div>
+        </div>
+        <div id="loadingSpinner" class="spinner" style="display: none">
+          <div class="spin"></div>
+          <p>加载中... / Loading...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
