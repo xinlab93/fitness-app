@@ -49,6 +49,9 @@ import('./api/sync-health.js').then(({ default: syncHealth }) => {
 import('./api/health-data.js').then(({ default: healthData }) => {
   app.get('/api/health-data', healthData);
 });
+import('./api/log-workout.js').then(({ default: logWorkout }) => {
+  app.post('/api/log-workout', logWorkout);
+});
 
 app.get('/health', (req, res) => {
   res.json({
