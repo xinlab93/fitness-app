@@ -597,6 +597,155 @@ header p {
   border-bottom: 1px solid rgba(255, 140, 0, 0.2);
 }
 
+/* Health Dashboard Panel */
+.health-panel {
+  background: linear-gradient(135deg, rgba(74, 222, 128, 0.06), rgba(59, 130, 246, 0.04));
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  border-radius: 10px;
+  margin-bottom: 22px;
+  overflow: hidden;
+}
+
+.health-panel[open] {
+  border-color: rgba(74, 222, 128, 0.4);
+}
+
+.health-panel-header {
+  cursor: pointer;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  list-style: none;
+  font-weight: 500;
+  user-select: none;
+}
+
+.health-panel-header::-webkit-details-marker { display: none; }
+
+.health-panel-header::after {
+  content: '▼';
+  font-size: 0.8em;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+
+.health-panel[open] .health-panel-header::after {
+  transform: rotate(180deg);
+}
+
+.health-panel-title {
+  color: #4ade80;
+}
+
+.health-panel-meta {
+  font-size: 0.85em;
+  color: var(--text-muted);
+  margin-right: 16px;
+}
+
+.health-panel-body {
+  padding: 4px 16px 16px;
+  border-top: 1px solid rgba(74, 222, 128, 0.15);
+}
+
+.hp-section {
+  margin-top: 14px;
+}
+
+.hp-section h4 {
+  font-size: 0.92em;
+  color: var(--primary-color);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.hp-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hp-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  font-size: 0.88em;
+}
+
+.hp-date {
+  color: var(--text-muted);
+  font-family: monospace;
+  font-size: 0.85em;
+  min-width: 60px;
+}
+
+.hp-type {
+  color: var(--text-light);
+  font-weight: 500;
+  flex: 1;
+}
+
+.hp-meta {
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+
+.hp-stat {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+.hp-big {
+  font-size: 1.6em;
+  color: #4ade80;
+  font-weight: 700;
+  font-family: -apple-system, monospace;
+}
+
+.hp-big small {
+  font-size: 0.55em;
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+
+.hp-trend {
+  font-family: monospace;
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+.hp-metrics {
+  display: flex;
+  gap: 12px;
+}
+
+.hp-metric {
+  flex: 1;
+  text-align: center;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.hp-label {
+  font-size: 0.78em;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
 .section-warning {
   color: #f87171;
   border-bottom-color: rgba(239, 68, 68, 0.3);

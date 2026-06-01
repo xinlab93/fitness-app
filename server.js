@@ -42,6 +42,14 @@ app.post('/api/muscle-to-exercises', makeHandler(buildMusclePrompt, 'muscle'));
 app.post('/api/exercise-to-muscles', makeHandler(buildExercisePrompt, 'exercise'));
 app.post('/api/injury-to-recovery', makeHandler(buildInjuryPrompt, 'injury'));
 
+// Health sync (POST) and read (GET) — delegate to the same handlers Vercel uses.
+import('./api/sync-health.js').then(({ default: syncHealth }) => {
+  app.post('/api/sync-health', syncHealth);
+});
+import('./api/health-data.js').then(({ default: healthData }) => {
+  app.get('/api/health-data', healthData);
+});
+
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',

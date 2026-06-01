@@ -1,3 +1,91 @@
+// Health panel
+async function loadHealthPanel() {
+  const meta = document.getElementById('healthPanelMeta');
+  const body = document.getElementById('healthPanelBody');
+  if (!meta || !body) return;
+
+  try {
+    const res = await fetch('/api/health-data');
+    const json = await res.json();
+    if (!json.configured || !json.data) {
+      meta.textContent = '未连接';
+      return;
+    }
+    const data = json.data;
+    const synced = data.syncedAt ? new Date(data.syncedAt) : null;
+    meta.textContent = synced
+      ? `最近同步 ${formatRelativeTime(synced)}`
+      : '已配置';
+
+    body.innerHTML = renderHealthData(data);
+  } catch (e) {
+    meta.textContent = '加载失败';
+    console.error(e);
+  }
+}
+
+function formatRelativeTime(date) {
+  const diff = (Date.now() - date.getTime()) / 1000;
+  if (diff < 60) return '刚刚';
+  if (diff < 3600) return Math.floor(diff / 60) + ' 分钟前';
+  if (diff < 86400) return Math.floor(diff / 3600) + ' 小时前';
+  return Math.floor(diff / 86400) + ' 天前';
+}
+
+function renderHealthData(data) {
+  const sections = [];
+
+  if (Array.isArray(data.workouts) && data.workouts.length > 0) {
+    const items = data.workouts
+      .slice(0, 5)
+      .map((w) => {
+        const date = (w.start || '').slice(0, 10);
+        const dur = w.duration ? `${Math.round(w.duration)}分` : '';
+        const cal = w.calories ? `${Math.round(w.calories)}kcal` : '';
+        const hr = w.avgHR ? `❤️${Math.round(w.avgHR)}` : '';
+        return `<li><span class="hp-date">${date}</span> <span class="hp-type">${w.type || '运动'}</span> <span class="hp-meta">${dur} ${cal} ${hr}</span></li>`;
+      })
+      .join('');
+    sections.push(`<div class="hp-section"><h4>🏋️ 近期训练</h4><ul class="hp-list">${items}</ul></div>`);
+  }
+
+  if (Array.isArray(data.hrv) && data.hrv.length > 0) {
+    const vals = data.hrv.slice(0, 7).map((h) => Math.round(h.ms || h.value || 0));
+    const avg = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+    sections.push(
+      `<div class="hp-section"><h4>💓 HRV</h4><div class="hp-stat"><span class="hp-big">${avg}<small>ms</small></span><span class="hp-trend">${vals.join(' / ')}</span></div></div>`
+    );
+  }
+
+  if (Array.isArray(data.sleep) && data.sleep.length > 0) {
+    const items = data.sleep
+      .slice(0, 5)
+      .map((s) => {
+        const date = (s.date || '').slice(5, 10);
+        const hrs = (s.hours || 0).toFixed(1);
+        return `<li><span class="hp-date">${date}</span> <span class="hp-meta">${hrs} 小时</span></li>`;
+      })
+      .join('');
+    sections.push(`<div class="hp-section"><h4>😴 睡眠</h4><ul class="hp-list">${items}</ul></div>`);
+  }
+
+  if (data.metrics) {
+    const m = data.metrics;
+    const parts = [];
+    if (m.weight) parts.push(`<div class="hp-metric"><span class="hp-big">${m.weight}<small>kg</small></span><span class="hp-label">体重</span></div>`);
+    if (m.restingHR) parts.push(`<div class="hp-metric"><span class="hp-big">${m.restingHR}<small>bpm</small></span><span class="hp-label">静息心率</span></div>`);
+    if (parts.length) sections.push(`<div class="hp-section"><h4>📊 身体指标</h4><div class="hp-metrics">${parts.join('')}</div></div>`);
+  }
+
+  if (sections.length === 0) {
+    return '<p class="placeholder">数据为空</p>';
+  }
+
+  return sections.join('');
+}
+
+loadHealthPanel();
+
 // DOM Elements
 const exerciseInput = document.getElementById('exerciseInput');
 const searchBtn = document.getElementById('searchBtn');
